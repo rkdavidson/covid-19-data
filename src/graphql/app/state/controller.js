@@ -3,8 +3,9 @@ const dataSource = require('./dataSource');
 const State = {
   createFromRow(row) {
     return dataSource.getObjectFromRow(row, {
-      includeColumns: ['name', 'population', 'date', 'casesCumulative', 'deathsCumulative'],
+      includeColumns: ['state', 'population', 'date', 'casesCumulative', 'deathsCumulative'],
       renameColumns: {
+        state: 'name',
         date: 'mostRecentDataDate',
       },
     });
@@ -30,7 +31,7 @@ const State = {
 
     if (args.select.name) {
       const result = dataSource
-        .filterByColumn('name', args.select.name, { reverseSort: true, limit: 1 })
+        .filterByColumn('state', args.select.name, { reverseSort: true, limit: 1 })
         .pop();
 
       console.log('[rkd] result:', result);

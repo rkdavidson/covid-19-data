@@ -4,7 +4,7 @@ const path = require('path');
 const CsvData = require('../../utils/CsvData');
 
 const extractIdFromName = (getCell) => {
-  return getCell('name').toLowerCase().replace(' ', '-');
+  return getCell('state').toLowerCase().replace(' ', '-');
 };
 const statePopulationsCsvData = new CsvData({
   csvFile: 'processed/us-state-populations.csv',

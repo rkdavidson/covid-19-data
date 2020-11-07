@@ -29,7 +29,7 @@ def process_states():
 
     with open('./processed/us-states.csv', 'w', newline='\n') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(('state', 'date', 'cases', 'cases_cumulative', 'deaths', 'deaths_cumulative'))
+        writer.writerow(('state:String', 'date:Date', 'cases:Int', 'cases_cumulative:Int', 'deaths:Int', 'deaths_cumulative:Int'))
 
         for state in states:
             del states[state][0]
@@ -67,7 +67,7 @@ def process_census():
 
     with open('./processed/us-state-populations.csv', 'w', newline='\n') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(('state', 'population'))
+        writer.writerow(('state:String', 'population:Int'))
 
         for state in populations:
             print(f'{state}: {numeral(populations[state])}')

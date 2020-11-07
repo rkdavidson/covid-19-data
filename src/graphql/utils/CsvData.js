@@ -20,6 +20,28 @@ const log = {
     console.log(chalk.dim.magenta('='.repeat(40)));
   },
   value: (...args) => console.log(chalk.magenta.dim('--> ') + chalk.magenta(...args)),
+  csvDetails: (colNames, colTypes, rows) => {
+    log.tableHeader('Columns', colNames.length);
+
+    const longestColName = colNames.reduce((longest, current) => {
+      return current.length > longest.length ? current : longest;
+    }, '');
+
+    colNames.forEach((colName, index) => {
+      const separator = chalk.dim.magenta(' | ');
+      const paddedColName = colName.padEnd(longestColName.length + 2, ' ');
+
+      log.value(
+        [index, paddedColName, colTypes[index]]
+          .map((string) => chalk.magentaBright(string))
+          .join(separator)
+      );
+    });
+
+    log.tableHeader('Rows', rows.length);
+    log.value(rows[0]);
+    console.log('');
+  },
 };
 
 const toCamel = (string) => {
@@ -58,35 +80,15 @@ class CsvData {
 
   readFile() {
     const fullCsvPath = path.join(process.cwd(), this.csvFile);
-
     log.title('readCsv()');
+
     const csv = fs.readFileSync(fullCsvPath, { encoding: 'utf-8' });
 
     const allRows = splitCsv(csv);
+    const headerRow = allRows.shift();
 
     // Process header row/columns
-    const { colNames, colTypes, colValueParsers } = allRows.shift().reduce(
-      (output, headerCellValue) => {
-        const [colName, colType = 'Unknown'] = headerCellValue.split(':');
-
-        // Process column name
-        const colNameClean = toCamel(colName);
-        output.colNames.push(
-          (!!this.renameColumns && this.renameColumns[colNameClean]) || colNameClean
-        );
-
-        // Process column type
-        const colValueParser = COLUMN_VALUE_PARSERS[colType];
-        if (colType === 'Unknown' || !colValueParser) {
-          console.log(chalk.yellow(`⚠️  [CsvData] Unknown column type in "${headerCellValue}"`));
-        }
-        output.colTypes.push(colType);
-        output.colValueParsers.push(colValueParser);
-
-        return output;
-      },
-      { colNames: [], colTypes: [], colValueParsers: [] }
-    );
+    const { colNames, colTypes, colValueParsers } = this.parseFileHeaderRow(headerRow);
 
     this.cols = arrayToObject(colNames);
     this.colIndexes = swapObjectKeysAndValues(this.cols);
@@ -95,25 +97,30 @@ class CsvData {
       allRows.map((row) => row.map((cellValue, index) => this.colValueParsers[index](cellValue)))
     );
 
-    // Log column definitions ---
-    log.tableHeader('Columns', colNames.length);
-    const longestColName = colNames.reduce((longest, current) => {
-      return current.length > longest.length ? current : longest;
-    }, '');
-    colNames.forEach((colName, index) => {
-      const separator = chalk.dim.magenta(' | ');
-      const paddedColName = colName.padEnd(longestColName.length + 2, ' ');
+    log.csvDetails(colNames, colTypes, this.rows);
+  }
 
-      log.value(
-        [index, paddedColName, colTypes[index]]
-          .map((string) => chalk.magentaBright(string))
-          .join(separator)
+  parseFileHeaderRow(headerRow) {
+    const initialOutput = { colNames: [], colTypes: [], colValueParsers: [] };
+
+    return headerRow.reduce((output, headerCellValue) => {
+      const [colName, colType = 'String'] = headerCellValue.split(':');
+
+      // Process column name
+      const colNameClean = toCamel(colName);
+
+      // --> Maybe rename it
+      output.colNames.push(
+        (!!this.renameColumns && this.renameColumns[colNameClean]) || colNameClean
       );
-    });
 
-    log.tableHeader('Rows', this.rows.length);
-    log.value(this.rows[0]);
-    console.log('');
+      // Process column type
+      const colValueParser = COLUMN_VALUE_PARSERS[colType] || COLUMN_VALUE_PARSERS.String;
+      output.colTypes.push(colType);
+      output.colValueParsers.push(colValueParser);
+
+      return output;
+    }, initialOutput);
   }
 
   getRowId(row) {
@@ -143,6 +150,10 @@ class CsvData {
   }
 
   getObjectFromRow(row, { appendId = true, includeColumns, excludeColumns, renameColumns } = {}) {
+    if (!row) {
+      throw new Error('Cannot process row');
+    }
+
     if (row.length !== Object.keys(this.cols).length) {
       throw new Error('Number of row values and columns are different');
     }
