@@ -100,8 +100,11 @@ const { makeAppSchema } = require('./schema');
 //   },
 // };
 
+const { schema, context } = makeAppSchema({ enableLogging: true });
+
 const server = new ApolloServer({
-  schema: makeAppSchema({ enableLogging: true }),
+  schema,
+  context,
 });
 
 server.listen().then(({ url }) => {

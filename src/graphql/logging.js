@@ -10,7 +10,10 @@ const logTitle = (num) =>
 
 const logSchemaModuleListItem = (index, length, name, schema) =>
   console.log(
-    `  ${index === length - 1 ? '└' : '├'}─ ${chalk.yellow(name)} `.padEnd(42) +
+    `  ${index === length - 1 ? '└' : '├'}─ ${chalk.yellow(name)} `.padEnd(
+      42 - (schema.controller ? 3 : 0)
+    ) +
+      (schema.controller ? '🎮 ' : '') +
       chalk.dim.gray('| ') +
       chalk.cyan('•'.repeat(Object.keys(schema.resolvers?.Query || {}).length)) +
       chalk.magenta('•'.repeat(Object.keys(schema.resolvers?.Mutation || {}).length))

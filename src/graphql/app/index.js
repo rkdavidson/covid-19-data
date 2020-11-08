@@ -1,10 +1,11 @@
 const glob = require('glob');
+const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 
 // ---
 
-const ENABLE_LOGGING = 0;
+const ENABLE_LOGGING = 1;
 
 const log = ENABLE_LOGGING ? console.log : () => null;
 
@@ -22,22 +23,44 @@ const logListItem = (index, length, name, path) =>
 
 // ---
 
+const moduleSubFiles = {
+  controller: 'controller.js',
+  // dataSource: 'dataSource.js',
+};
+
+function getAppModuleSubFiles(modulePath) {
+  // Dynamically import existing sub-files using key/path pairs from above ☝️.
+  return Object.entries(moduleSubFiles).reduce((output, [outputKey, fileName]) => {
+    const filePath = path.join(modulePath, fileName);
+    const fileExists = fs.existsSync(filePath);
+
+    if (fileExists) {
+      output[outputKey] = require(filePath);
+    }
+
+    return output;
+  }, {});
+}
+
 function getAppModules() {
   const appModules = {};
 
   try {
-    const files = glob.sync('**/*.module.js', { cwd: 'src/graphql/app' });
+    const moduleFiles = glob.sync('**/*.module.js', { cwd: 'src/graphql/app' });
 
-    logTitle(files.length);
+    logTitle(moduleFiles.length);
 
-    files.forEach((file, index) => {
+    moduleFiles.forEach((file, index) => {
       const moduleName = path.dirname(file);
-      const modulePath = __dirname + '/' + file;
+      const modulePath = path.join(__dirname, file);
+      const moduleFolder = path.join(__dirname, moduleName);
 
-      logListItem(index, files.length, moduleName, modulePath);
+      logListItem(index, moduleFiles.length, moduleName, `src/graphql/app/${moduleName}/${file}`);
+
       appModules[moduleName] = {
         appModule: true,
-        ...require(__dirname + '/' + file),
+        ...require(modulePath),
+        ...getAppModuleSubFiles(moduleFolder),
       };
     });
   } catch (error) {

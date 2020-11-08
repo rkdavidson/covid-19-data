@@ -4,22 +4,22 @@ const DateRangeStats = require('./controller');
 module.exports = {
   typeDefs: gql`
     type DateRangeStats {
-      # location: Location
+      locations: [Location]
       startDate: Date
       endDate: Date
       casesTotal: Int
       deathsTotal: Int
-      # dailyStats: [DateStats]
+      dateStats: [DateStats]
     }
 
     input DateRangeStatsSelect {
-      # location: LocationInput
+      locations: LocationsInput
       startDate: Date
       endDate: Date
     }
 
     type DateStats {
-      # location: Location
+      location: Location
       date: Date
       cases: Int
       deaths: Int
@@ -31,7 +31,7 @@ module.exports = {
   `,
   resolvers: {
     Query: {
-      dateRangeStats: (obj, args, context, info) => DateRangeStats.query(args),
+      dateRangeStats: (root, args, context, info) => DateRangeStats.query(args, context),
     },
     DateRangeStats: {},
   },

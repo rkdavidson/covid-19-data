@@ -149,6 +149,14 @@ class CsvData {
     return row[col];
   }
 
+  getObjectsByRowIds(ids) {
+    console.log('[rkd] getObjectsByRowIds() 🔹🔹🔹');
+    console.log('[rkd] ids:', ids);
+
+    const results = this.rows.map((row) => this.getRowId(row));
+    console.log('[rkd] results:', results);
+  }
+
   getObjectFromRow(row, { appendId = true, includeColumns, excludeColumns, renameColumns } = {}) {
     if (!row) {
       throw new Error('Cannot process row');
@@ -200,7 +208,6 @@ class CsvData {
       });
     }
 
-    console.log('[rkd] 🔸 rowObject:', rowObject);
     return rowObject;
   }
 

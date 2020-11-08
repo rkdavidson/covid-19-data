@@ -8,8 +8,8 @@ module.exports = {
       name: String!
       population: Int
       mostRecentDataDate: Date
-      casesCumulative: Int
-      deathsCumulative: Int
+      casesTotal: Int
+      deathsTotal: Int
       # counties: [County]
     }
 
@@ -32,7 +32,7 @@ module.exports = {
   `,
   resolvers: {
     Query: {
-      state: (root, args, context, info) => State.findOne(args),
+      state: (root, args, context, info) => State.findOne(args, context),
       states: (root, args, context, info) => State.query(args),
     },
   },

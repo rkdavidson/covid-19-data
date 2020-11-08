@@ -11,10 +11,16 @@ module.exports = {
       id: ID
       name: String
     }
+
+    input LocationsInput {
+      ids: [ID]
+      names: [String]
+    }
   `,
   resolvers: {
     Location: {
       __resolveType: (obj) => {
+        console.log('[rkd] Location:', obj);
         return 'State';
       },
     },

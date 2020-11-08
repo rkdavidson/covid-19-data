@@ -1,32 +1,19 @@
 const dataSource = require('./dataSource');
 
 const State = {
+  dataSource,
   createFromRow(row) {
     return dataSource.getObjectFromRow(row, {
       includeColumns: ['state', 'population', 'date', 'casesCumulative', 'deathsCumulative'],
       renameColumns: {
         state: 'name',
         date: 'mostRecentDataDate',
+        casesCumulative: 'casesTotal',
+        deathsCumulative: 'deathsTotal',
       },
     });
   },
-  // deriveStatesFromRows(rows) {
-  //   const output = {};
-
-  //   rows.forEach((row) => {
-  //     const rowId = dataSource.getRowId(row);
-
-  //     // Create key for this state on output
-  //     if (!output[rowId]) {
-  //       output[rowId] = [];
-  //     }
-
-  //     output[rowId].push(this.createFromRow(row));
-  //   });
-
-  //   return output;
-  // },
-  findOne(args) {
+  findOne(args, context) {
     if (!args?.select) return null;
 
     if (args.select.name) {
@@ -34,15 +21,11 @@ const State = {
         .filterByColumn('state', args.select.name, { reverseSort: true, limit: 1 })
         .pop();
 
-      console.log('[rkd] result:', result);
-
-      const stateObject = this.createFromRow(result);
-      console.log('stateObject:', stateObject);
-
-      return stateObject;
+      return this.createFromRow(result);
     }
   },
   query(args) {
+    console.log('[rkd] args:', args);
     return [null, null];
   },
 };
