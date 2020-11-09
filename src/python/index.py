@@ -25,39 +25,66 @@ def read_csv(path, row_parser):
 # -----------------------------------------------------------------------
 
 def process_states():
-    states = read_csv('./us-states.csv', process_state_row)
+    # states = read_csv('./us-states.csv', process_state_row)
+    census = read_csv('./rkd-us-census.csv', process_state_census_row)
+    print('census: ', census)
 
-    with open('./processed/us-states.csv', 'w', newline='\n') as csvfile:
+    # with open('./processed/us-states.csv', 'w', newline='\n') as csvfile:
+    #     writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    #     writer.writerow(('state:String', 'fips:String', 'date:Date', 'cases:Int', 'cases_cumulative:Int', 'deaths:Int', 'deaths_cumulative:Int'))
+
+    #     for fips in states:
+    #         del states[fips][0]
+
+    #         for day in states[fips]:
+    #             state, date, cases, cases_cumulative, deaths, deaths_cumulative = day.values()
+    #             writer.writerow((state, fips, date, cases, cases_cumulative, deaths, deaths_cumulative))
+
+    with open('./processed/sql-tables/states.csv', 'w', newline='\n') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(('state:String', 'date:Date', 'cases:Int', 'cases_cumulative:Int', 'deaths:Int', 'deaths_cumulative:Int'))
+        writer.writerow(('fips:Int', 'name:String', 'region:Int', 'division:Int', 'population:Int'))
 
-        for state in states:
-            del states[state][0]
-
-            for day in states[state]:
-                date, cases, cases_cumulative, deaths, deaths_cumulative = day.values()
-                writer.writerow((state, date, cases, cases_cumulative, deaths, deaths_cumulative))
+        for row in census['rows']:
+            print('row: ', row)
+            # fips, date, cases, cases_cumulative, deaths, deaths_cumulative = states[fips][0].values()
+            writer.writerow(row)
 
 def process_state_row(index, row, output):
     date, state, fips, cases, deaths = row
 
-    if state not in output:
-        output[state] = [
+    if fips not in output:
+        output[fips] = [
             {
                 "cases_cumulative": 0,
                 "deaths_cumulative": 0
             }
         ]
 
-    last_entry = output[state][-1]
+    last_entry = output[fips][-1]
 
-    output[state].append({
+    output[fips].append({
+        "fips": fips,
         "date": date,
         "cases": int(cases) - last_entry["cases_cumulative"],
         "cases_cumulative": int(cases),
         "deaths": int(deaths) - last_entry["deaths_cumulative"],
         "deaths_cumulative": int(deaths)
     })
+
+def process_state_census_row(index, row, output):
+    if index >= 6:
+        region = row[1] # REGION
+        division = row[2] # DIVISION
+        fips = row[3] # STATE
+        name = row[4] # NAME
+        population = int(row[16]) # POPESTIMATE2019
+
+        output_row = [fips, name, region, division, population]
+
+        if 'rows' not in output:
+            output['rows'] = [output_row]
+        else:
+            output['rows'].append(output_row)
 
 # Census Data
 # -----------------------------------------------------------------------
@@ -77,11 +104,11 @@ def process_census_row(index, row, output):
     if index == 1 or index >= 6:
         state = row[4] # NAME
         population = int(row[16]) # POPESTIMATE2019
-        output[state] = population
+        output.push()
 
 # Program
 # -----------------------------------------------------------------------
 
 if __name__ == "__main__":
     process_states()
-    process_census()
+    # process_census()
